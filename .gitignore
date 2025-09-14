@@ -12,6 +12,9 @@ jarvis-venv/
 logs/
 *.log
 
+# Documents
+documents/
+
 # Databases
 *.db
 

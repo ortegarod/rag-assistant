@@ -45,12 +45,12 @@ class RAGPipeline:
     def count_tokens(self, text):
         return self.tokenizer.estimate_tokens(text)
 
-    def summarize_conversation_chunk(self, chunk):
+    async def summarize_conversation_chunk(self, chunk):
         summary_prompt = f"Summarize the following conversation chunk concisely, preserving key points:\n\n{chunk}"
-        summary = self.prompt_node.prompt(summary_prompt)
+        summary = await self.prompt_node.prompt(summary_prompt)
         return summary
 
-    def truncate_context(self, context, query, history):
+    async def truncate_context(self, context, query, history):
         try:
             context_tokens = self.count_tokens(context)
             query_tokens = self.count_tokens(query)
@@ -92,7 +92,7 @@ class RAGPipeline:
                             else:
                                 if current_chunk:
                                     chunk_text = "\n".join([f"{m['role']}: {m['content']}" for m in current_chunk])
-                                    summary = self.summarize_conversation_chunk(chunk_text)
+                                    summary = await self.summarize_conversation_chunk(chunk_text)
                                     summarized_history.insert(0, {"role": "system", "content": f"Summary: {summary}"})
                                 current_chunk = [msg]
                                 current_chunk_tokens = msg_tokens
@@ -134,7 +134,7 @@ class RAGPipeline:
 
             self.conversation_manager.add_message("user", query)
 
-            truncated_context, truncated_history = self.truncate_context(
+            truncated_context, truncated_history = await self.truncate_context(
                 context, query, self.conversation_manager.get_recent_messages(self.max_history)
             )
 
