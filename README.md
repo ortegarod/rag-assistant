@@ -59,11 +59,16 @@ This creates the `Document` schema (if missing) and upserts files by filename (`
 4) Start an LLM endpoint
 
 - Default: `JANAI_API_URL=http://localhost:1337/v1/chat/completions`, `JANAI_MODEL_NAME=mistral-ins-7b-q4`
+- If your server requires an API token (e.g., Jan AI), export it as `JANAI_API_KEY`. The client will send `Authorization: Bearer $JANAI_API_KEY`.
 - Example (Ollama):
 
 ```bash
 export JANAI_API_URL=http://localhost:11434/v1/chat/completions
 export JANAI_MODEL_NAME=llama3.1
+# Example for Jan AI on 127.0.0.1 with API key
+export JANAI_API_URL=http://127.0.0.1:1337/v1/chat/completions
+export JANAI_MODEL_NAME=mistral-ins-7b-q4
+export JANAI_API_KEY=YOUR_TOKEN_HERE
 ```
 
 5) Run the assistant
@@ -87,6 +92,15 @@ Configure via environment variables (see `config.py`):
 - `BASE_DELAY` (default `1` second)
 
 Logging outputs to `logs/app.log` (rotating file) and console; set level in `logging_config.setup_logging()`.
+
+### .env Support
+
+The app automatically loads a `.env` file from the project root. You can copy `.env.example` to `.env` and edit values:
+
+```bash
+cp .env.example .env
+# edit .env
+```
 
 ## Data & Token Limits
 

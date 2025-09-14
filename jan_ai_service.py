@@ -7,12 +7,13 @@ from aiohttp import ClientError
 logger = logging.getLogger(__name__)
 
 class JanAIPromptNode:
-    def __init__(self, api_url: str, model_name: str, max_tokens=32000, max_retries: int = 3, base_delay: float = 1):
+    def __init__(self, api_url: str, model_name: str, max_tokens=32000, max_retries: int = 3, base_delay: float = 1, api_key: str = None):
         self.api_url = api_url
         self.model_name = model_name
         self.max_tokens = max_tokens
         self.max_retries = max_retries
         self.base_delay = base_delay
+        self.api_key = api_key
 
     async def prompt(self, prompt_text: str) -> str:
         messages = [{"role": "user", "content": prompt_text}]
@@ -24,10 +25,15 @@ class JanAIPromptNode:
             "max_tokens": self.max_tokens
         }
 
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        headers["Content-Type"] = "application/json"
+
         async with aiohttp.ClientSession() as session:
             for attempt in range(self.max_retries):
                 try:
-                    async with session.post(self.api_url, json=payload) as response:
+                    async with session.post(self.api_url, json=payload, headers=headers) as response:
                         response.raise_for_status()
                         result = await response.json()
                         return result['choices'][0]['message']['content']

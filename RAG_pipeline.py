@@ -15,7 +15,6 @@ class RAGPipeline:
     def __init__(self, max_history=20, max_tokens=32000):
         self.retriever = None
         self.prompt_node = None
-        self.conversation_history = []
         self.max_history = max_history
         self.max_tokens = max_tokens
         self.tokenizer = Tokenizer()
@@ -35,7 +34,8 @@ class RAGPipeline:
                 api_url=Config.JANAI_API_URL,
                 model_name=Config.JANAI_MODEL_NAME,
                 max_retries=Config.MAX_RETRIES,
-                base_delay=Config.BASE_DELAY
+                base_delay=Config.BASE_DELAY,
+                api_key=Config.JANAI_API_KEY
             )
             logger.info("RAGPipeline components initialized successfully")
         except Exception as e:
@@ -126,17 +126,15 @@ class RAGPipeline:
             logger.debug(f"Retrieved {len(docs)} documents matching user query: {query}")
             context = "\n".join([f"Document {i + 1}: {doc['content']}" for i, doc in enumerate(docs)])
 
-            self.conversation_history.append({"role": "user", "content": query})
-
-            logger.debug(f"Current conversation history:")
-            for msg in self.conversation_history[-self.max_history:]:
-                logger.debug(f"  {msg['role']}: {msg['content'][:50]}...")  # Log first 50 chars of each message
-
             self.conversation_manager.add_message("user", query)
 
-            truncated_context, truncated_history = await self.truncate_context(
-                context, query, self.conversation_manager.get_recent_messages(self.max_history)
-            )
+            recent_history = self.conversation_manager.get_recent_messages(self.max_history)
+
+            logger.debug("Recent persisted conversation history:")
+            for msg in recent_history:
+                logger.debug(f"  {msg['role']}: {msg['content'][:50]}...")
+
+            truncated_context, truncated_history = await self.truncate_context(context, query, recent_history)
 
             logger.debug(f"Truncated context length: {len(truncated_context)}")
             logger.debug(f"Truncated history length: {len(truncated_history)}")
