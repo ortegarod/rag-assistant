@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import asyncio
@@ -53,13 +53,23 @@ def create_app() -> FastAPI:
         # Minimal health signal; deeper checks could be added
         return {"status": "ok", "weaviate_url": Config.WEAVIATE_URL, "model": Config.JANAI_MODEL_NAME}
 
+    def require_api_key(x_api_key: Optional[str] = Header(default=None)):
+        # If ALLOWED_API_KEYS is configured, enforce header check
+        if Config.ALLOWED_API_KEYS:
+            if not x_api_key or x_api_key not in Config.ALLOWED_API_KEYS:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid or missing API key",
+                )
+        return True
+
     @app.post("/chat", response_model=ChatResponse)
-    async def chat(req: ChatRequest):
+    async def chat(req: ChatRequest, _: bool = Depends(require_api_key)):
         answer = await rag.process_query(req.query, req.template)
         return ChatResponse(answer=answer)
 
     @app.post("/clear")
-    def clear():
+    def clear(_: bool = Depends(require_api_key)):
         rag.conversation_manager.clear_history()
         return {"status": "cleared"}
 
@@ -77,4 +87,3 @@ if __name__ == "__main__":
         port=8000,
         reload=False,
     )
-

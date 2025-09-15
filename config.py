@@ -22,3 +22,8 @@ class Config:
     MAX_RETRIES = int(os.environ.get("MAX_RETRIES", "3"))
     # Base delay for exponential backoff in seconds
     BASE_DELAY = float(os.environ.get("BASE_DELAY", "1"))
+    # Comma-separated list of API keys allowed to access our FastAPI endpoints
+    # Example: ALLOWED_API_KEYS="key1,key2,key3". If empty, auth is disabled.
+    ALLOWED_API_KEYS = [
+        k.strip() for k in os.environ.get("ALLOWED_API_KEYS", "").split(",") if k.strip()
+    ]

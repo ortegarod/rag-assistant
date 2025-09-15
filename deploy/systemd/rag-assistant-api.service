@@ -1,0 +1,18 @@
+[Unit]
+Description=RAG Assistant API (FastAPI)
+After=network.target
+
+[Service]
+Type=simple
+# Adjust to the actual repo location and user
+User=rag
+Group=rag
+WorkingDirectory=/opt/rag-assistant
+EnvironmentFile=/etc/rag-assistant/api.env
+ExecStart=/usr/bin/env bash -lc 'source /opt/rag-assistant/venv/bin/activate && python api_server.py'
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+

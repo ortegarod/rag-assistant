@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  weaviate:
+    image: semitechnologies/weaviate:1.24.5
+    container_name: rag-demo-weaviate
+    ports:
+      - "8080:8080"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+
+  api:
+    build:
+      context: .
+      dockerfile: deploy/api.Dockerfile
+    container_name: rag-demo-api
+    depends_on:
+      - weaviate
+    environment:
+      # Point to the internal Weaviate service
+      WEAVIATE_URL: http://weaviate:8080
+      # LLM endpoint defaults; override via env or .env file
+      JANAI_API_URL: ${JANAI_API_URL:-http://127.0.0.1:1337/v1/chat/completions}
+      JANAI_MODEL_NAME: ${JANAI_MODEL_NAME:-mistral-ins-7b-q4}
+      JANAI_API_KEY: ${JANAI_API_KEY:-}
+      ALLOWED_API_KEYS: ${ALLOWED_API_KEYS:-demo-key-123}
+      MAX_RETRIES: ${MAX_RETRIES:-3}
+      BASE_DELAY: ${BASE_DELAY:-1}
+    volumes:
+      - ./documents:/app/documents
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/web.Dockerfile
+      args:
+        # Browser must reach the API via host mapping; adjust if using a domain
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:8000}
+    container_name: rag-demo-web
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+volumes:
+  weaviate_data:
+

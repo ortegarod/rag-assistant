@@ -1,0 +1,19 @@
+[Unit]
+Description=RAG Assistant Web (Next.js)
+After=network.target
+
+[Service]
+Type=simple
+User=rag
+Group=rag
+WorkingDirectory=/opt/rag-assistant/web
+Environment=PORT=3000
+Environment=NODE_ENV=production
+Environment=NEXT_PUBLIC_API_BASE=https://your.domain.com
+ExecStart=/usr/bin/env bash -lc 'npm run start -- --port 3000'
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+

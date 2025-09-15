@@ -116,6 +116,7 @@ Configure via environment variables (see `config.py`):
 - `JANAI_MAX_TOKENS` (default `1024`) – output tokens cap; large values can cause 400s
 - `MAX_RETRIES` (default `3`)
 - `BASE_DELAY` (default `1` second)
+- `ALLOWED_API_KEYS` (optional, comma-separated) – if set, API requires header `X-API-Key` to match one of the values; if empty, auth is disabled
 
 Logging outputs to `logs/app.log` (rotating file) and console; set level in `logging_config.setup_logging()`.
 
@@ -127,6 +128,41 @@ The app automatically loads a `.env` file from the project root. You can copy `.
 cp .env.example .env
 # edit .env
 ```
+
+If `ALLOWED_API_KEYS` is set, the web UI has an input to store and send the `X-API-Key` header automatically.
+
+## Docker Demo (All-in-one)
+
+Spin up Weaviate, API, and Web with one command on a single VM.
+
+1) Optional: set env variables
+
+```bash
+cp .env.example .env
+# Edit .env to set JANAI_* and a demo ALLOWED_API_KEYS
+```
+
+2) Build and run
+
+```bash
+docker compose up -d --build
+```
+
+3) Ingest documents
+
+Place `.md`/`.txt` files in `./documents/`, then:
+
+```bash
+docker compose exec api python weaviate/populate_weaviate_store.py
+```
+
+4) Open the UI
+
+- Web: http://localhost:3000
+- API: http://localhost:8000 (`/health` for a quick check)
+- Weaviate: http://localhost:8080 (do not expose publicly in prod)
+
+If `ALLOWED_API_KEYS` is set, enter the key in the UI once; it is stored locally and sent as `X-API-Key`.
 
 ## Data & Token Limits
 
@@ -151,6 +187,30 @@ cp .env.example .env
   - Optional API key/bearer auth for `JANAI_API_URL`
   - Streaming responses from the LLM
   - More templates and template switching in the CLI
+
+## Productized Setup Playbook
+
+- Scope: Private, on‑prem RAG chat over your docs. Includes install, ingest, and light prompt tuning.
+- Deploy: FastAPI on port 8000, Next.js on 3000, Weaviate via Docker (compose in `weaviate/`).
+- Security: Set `ALLOWED_API_KEYS` in `.env` and provide the key to users (the web UI sends `X-API-Key`).
+- Handoff: Provide a README tailored to the client’s infra and a short Loom showing usage.
+
+## Deployment Templates
+
+- `deploy/nginx.conf`: Reverse proxy with HTTPS, optional Basic Auth, and routing to UI (3000) and API (8000).
+- `deploy/systemd/rag-assistant-api.service`: Systemd unit for FastAPI backend.
+- `deploy/systemd/rag-assistant-web.service`: Systemd unit for Next.js app (`npm run start`).
+- `docs/CLIENT_README_TEMPLATE.md`: Client-facing runbook for install, ops, and support.
+- `docs/INSTALL_CHECKLIST.md`: Preflight checks to speed up installs.
+- `docs/DEMO_SCRIPT.md`: 2‑minute demo flow for sales calls.
+- `docs/SOW_TEMPLATE.md`: Statement of Work template for pilots.
+- `docs/DEPLOYMENT_GUIDE.md`: Step‑by‑step guide for demo and production installs.
+
+## Packaging
+
+- `scripts/package-release.sh` builds a clean ZIP in `dist/` excluding dev artifacts.
+  - Usage: `./scripts/package-release.sh` or `./scripts/package-release.sh 2024-09-15`
+
 
 ## File Map
 
