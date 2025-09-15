@@ -10,7 +10,6 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [apiKey, setApiKey] = useState<string>("");
   const [sessionId, setSessionId] = useState<string>("");
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -19,8 +18,6 @@ export default function ChatPage() {
   }, [messages]);
 
   useEffect(() => {
-    const savedKey = typeof window !== 'undefined' ? localStorage.getItem('apiKey') : null;
-    if (savedKey) setApiKey(savedKey);
     const savedSession = typeof window !== 'undefined' ? localStorage.getItem('sessionId') : null;
     if (savedSession) {
       setSessionId(savedSession);
@@ -31,13 +28,6 @@ export default function ChatPage() {
     }
   }, []);
 
-  function persistKey(k: string) {
-    setApiKey(k);
-    try {
-      localStorage.setItem('apiKey', k);
-    } catch {}
-  }
-
   async function send() {
     const q = input.trim();
     if (!q || loading) return;
@@ -46,11 +36,10 @@ export default function ChatPage() {
     setInput("");
 
     try {
-      const res = await fetch(`${API_BASE}/chat`, {
+      const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(apiKey ? { "X-API-Key": apiKey } : {}),
         },
         body: JSON.stringify({ query: q, template: "default", session_id: sessionId }),
       });
@@ -69,10 +58,10 @@ export default function ChatPage() {
 
   async function clearHistory() {
     try {
-      await fetch(`${API_BASE}/clear`, {
+      await fetch(`${API_BASE}/api/clear`, {
         method: "POST",
         headers: {
-          ...(apiKey ? { "X-API-Key": apiKey } : {}),
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ session_id: sessionId }),
       });
@@ -97,13 +86,6 @@ export default function ChatPage() {
         <span>Backend: <code>{API_BASE}</code></span>
         <span style={{ opacity: 0.6 }}>|</span>
         <span style={{ opacity: 0.8 }}>Session: <code style={{opacity:0.8}}>{sessionId.slice(0,8)}</code></span>
-        <span style={{ opacity: 0.6 }}>|</span>
-        <input
-          value={apiKey}
-          onChange={(e) => persistKey(e.target.value)}
-          placeholder="API key (if required)"
-          style={{ padding: 6, borderRadius: 6, border: "1px solid #444", background: "#111", color: "#eee", minWidth: 180 }}
-        />
       </div>
       <div
         ref={listRef}

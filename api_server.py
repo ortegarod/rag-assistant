@@ -17,6 +17,8 @@ class ChatRequest(BaseModel):
     template: Optional[str] = "default"
     session_id: Optional[str] = "default"
 
+class ClearRequest(BaseModel):
+    session_id: Optional[str] = None
 
 class ChatResponse(BaseModel):
     answer: str
@@ -68,12 +70,12 @@ def create_app() -> FastAPI:
                 )
         return True
 
-    @app.post("/chat", response_model=ChatResponse)
+    @app.post("/api/chat", response_model=ChatResponse)
     async def chat(req: ChatRequest, _: bool = Depends(require_api_key)):
         answer = await rag.process_query(req.query, req.template, session_id=req.session_id or "default")
         return ChatResponse(answer=answer)
 
-    @app.post("/clear")
+    @app.post("/api/clear")
     def clear(req: ClearRequest, _: bool = Depends(require_api_key)):
         rag.conversation_manager.clear_history(session_id=req.session_id)
         return {"status": "cleared"}
@@ -92,5 +94,3 @@ if __name__ == "__main__":
         port=8000,
         reload=False,
     )
-class ClearRequest(BaseModel):
-    session_id: Optional[str] = None
