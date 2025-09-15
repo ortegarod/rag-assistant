@@ -17,6 +17,9 @@ documents/
 
 # Databases
 *.db
+node_modules/
+web/.next/
+web/out/
 
 # IDE / Editor
 .vscode/

@@ -81,6 +81,31 @@ Type your question, or use:
 - `clear history` – clears SQLite conversation history
 - `quit` – exits the CLI
 
+## Web UI (Next.js)
+
+A minimal Next.js frontend is included in `web/` that connects to the FastAPI backend.
+
+1) Start the Python API
+
+```bash
+# In one terminal
+pip install -r requirements.txt
+python api_server.py  # serves on http://localhost:8000
+```
+
+2) Start the Next.js dev server
+
+```bash
+# In another terminal
+cd web
+npm install  # or: pnpm i / yarn
+npm run dev  # http://localhost:3000
+```
+
+3) Use the chat UI at http://localhost:3000. It calls `POST /chat` on the Python API and `POST /clear` to clear history.
+
+If your API runs on a different host/port, set `NEXT_PUBLIC_API_BASE` in `web/.env.local` (e.g., `http://127.0.0.1:8000`).
+
 ## Configuration
 
 Configure via environment variables (see `config.py`):
@@ -88,6 +113,7 @@ Configure via environment variables (see `config.py`):
 - `WEAVIATE_URL` (default `http://localhost:8080`)
 - `JANAI_API_URL` (default `http://localhost:1337/v1/chat/completions`)
 - `JANAI_MODEL_NAME` (default `mistral-ins-7b-q4`)
+- `JANAI_MAX_TOKENS` (default `1024`) – output tokens cap; large values can cause 400s
 - `MAX_RETRIES` (default `3`)
 - `BASE_DELAY` (default `1` second)
 

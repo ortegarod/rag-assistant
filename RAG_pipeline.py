@@ -33,6 +33,7 @@ class RAGPipeline:
             self.prompt_node = JanAIPromptNode(
                 api_url=Config.JANAI_API_URL,
                 model_name=Config.JANAI_MODEL_NAME,
+                max_tokens=Config.JANAI_MAX_TOKENS,
                 max_retries=Config.MAX_RETRIES,
                 base_delay=Config.BASE_DELAY,
                 api_key=Config.JANAI_API_KEY
@@ -122,9 +123,15 @@ class RAGPipeline:
     async def process_query(self, query: str, template: str) -> str:
         try:
             logger.info(f"Processing query: {query}")
-            docs = self.retriever.retrieve(query, top_k=20)
+            # Keep retrieval small to avoid huge prompts on large documents
+            docs = self.retriever.retrieve(query, top_k=5)
             logger.debug(f"Retrieved {len(docs)} documents matching user query: {query}")
-            context = "\n".join([f"Document {i + 1}: {doc['content']}" for i, doc in enumerate(docs)])
+            # Truncate each doc content to avoid oversized prompts
+            MAX_DOC_CHARS = 1500
+            context = "\n".join([
+                f"Document {i + 1} ({doc.get('source','unknown')}): {doc.get('content','')[:MAX_DOC_CHARS]}"
+                for i, doc in enumerate(docs)
+            ])
 
             self.conversation_manager.add_message("user", query)
 

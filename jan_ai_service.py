@@ -21,8 +21,7 @@ class JanAIPromptNode:
         payload = {
             "model": self.model_name,
             "messages": messages,
-            "stream": False,
-            "max_tokens": self.max_tokens
+            "stream": False
         }
 
         headers = {}
@@ -34,9 +33,14 @@ class JanAIPromptNode:
             for attempt in range(self.max_retries):
                 try:
                     async with session.post(self.api_url, json=payload, headers=headers) as response:
-                        response.raise_for_status()
-                        result = await response.json()
-                        return result['choices'][0]['message']['content']
+                        if response.status >= 400:
+                            text = await response.text()
+                            logger.warning(
+                                f"Client error on attempt {attempt + 1}: {response.status} {response.reason}. Body: {text[:500]}"
+                            )
+                        else:
+                            result = await response.json()
+                            return result['choices'][0]['message']['content']
                 except aiohttp.ClientError as e:
                     logger.warning(f"Client error on attempt {attempt + 1}: {e}")
                 except Exception as e:

@@ -51,7 +51,8 @@ def update_document(client: weaviate.Client, source: str, content: str) -> None:
     try:
         query = (
             client.query
-            .get("Document", ["id"])
+            .get("Document", ["source"])  # we request id via _additional
+            .with_additional(["id"])  # GraphQL _additional { id }
             .with_where({
                 "path": ["source"],
                 "operator": "Equal",
@@ -80,7 +81,7 @@ def update_document(client: weaviate.Client, source: str, content: str) -> None:
             logger.warning(f"No document found with source: {source}")
             return
 
-        doc_id = documents[0]['id']
+        doc_id = documents[0]['_additional']['id']
         client.data_object.update(
             uuid=doc_id,
             class_name="Document",

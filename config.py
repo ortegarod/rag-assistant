@@ -16,6 +16,8 @@ class Config:
     JANAI_MODEL_NAME = os.environ.get("JANAI_MODEL_NAME", "mistral-ins-7b-q4")
     # Optional API key for Jan.ai/OpenAI-compatible endpoint
     JANAI_API_KEY = os.environ.get("JANAI_API_KEY", None)
+    # Max tokens for LLM output (many servers reject very large numbers)
+    JANAI_MAX_TOKENS = int(os.environ.get("JANAI_MAX_TOKENS", "1024"))
     # Maximum number of retries for API calls
     MAX_RETRIES = int(os.environ.get("MAX_RETRIES", "3"))
     # Base delay for exponential backoff in seconds
