@@ -32,6 +32,10 @@ def create_app() -> FastAPI:
             "http://localhost:3000",
             "http://127.0.0.1:3000",
             "http://0.0.0.0:3000",
+
+            # Public demo origin (server IP)
+            "http://15.204.90.224:3000",
+            "http://15.204.90.224",
         ],
         allow_credentials=True,
         allow_methods=["*"],
