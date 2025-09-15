@@ -120,7 +120,7 @@ class RAGPipeline:
             # In case of a critical error, return the original context and history
             return context, history
 
-    async def process_query(self, query: str, template: str) -> str:
+    async def process_query(self, query: str, template: str, session_id: str = "default") -> str:
         try:
             logger.info(f"Processing query: {query}")
             # Keep retrieval small to avoid huge prompts on large documents
@@ -133,9 +133,9 @@ class RAGPipeline:
                 for i, doc in enumerate(docs)
             ])
 
-            self.conversation_manager.add_message("user", query)
+            self.conversation_manager.add_message("user", query, session_id=session_id)
 
-            recent_history = self.conversation_manager.get_recent_messages(self.max_history)
+            recent_history = self.conversation_manager.get_recent_messages(self.max_history, session_id=session_id)
 
             logger.debug("Recent persisted conversation history:")
             for msg in recent_history:
@@ -160,7 +160,7 @@ class RAGPipeline:
                 return "I apologize, but the current query with context is too long for me to process. Could you please try a shorter query or provide less context?"
 
             response = await self.prompt_node.prompt(prompt)
-            self.conversation_manager.add_message("assistant", response)
+            self.conversation_manager.add_message("assistant", response, session_id=session_id)
             logger.info("Query processed successfully")
             return response
 

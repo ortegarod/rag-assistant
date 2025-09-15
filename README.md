@@ -102,7 +102,7 @@ npm install  # or: pnpm i / yarn
 npm run dev  # http://localhost:3000
 ```
 
-3) Use the chat UI at http://localhost:3000. It calls `POST /chat` on the Python API and `POST /clear` to clear history.
+3) Use the chat UI at http://localhost:3000/chat. It calls `POST /chat` on the Python API and `POST /clear` to clear history. The UI generates a per‑visitor `session_id` so chats are isolated per browser.
 
 If your API runs on a different host/port, set `NEXT_PUBLIC_API_BASE` in `web/.env.local` (e.g., `http://127.0.0.1:8000`).
 

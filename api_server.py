@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 class ChatRequest(BaseModel):
     query: str
     template: Optional[str] = "default"
+    session_id: Optional[str] = "default"
 
 
 class ChatResponse(BaseModel):
@@ -65,12 +66,12 @@ def create_app() -> FastAPI:
 
     @app.post("/chat", response_model=ChatResponse)
     async def chat(req: ChatRequest, _: bool = Depends(require_api_key)):
-        answer = await rag.process_query(req.query, req.template)
+        answer = await rag.process_query(req.query, req.template, session_id=req.session_id or "default")
         return ChatResponse(answer=answer)
 
     @app.post("/clear")
-    def clear(_: bool = Depends(require_api_key)):
-        rag.conversation_manager.clear_history()
+    def clear(req: ClearRequest, _: bool = Depends(require_api_key)):
+        rag.conversation_manager.clear_history(session_id=req.session_id)
         return {"status": "cleared"}
 
     return app
@@ -87,3 +88,5 @@ if __name__ == "__main__":
         port=8000,
         reload=False,
     )
+class ClearRequest(BaseModel):
+    session_id: Optional[str] = None

@@ -21,30 +21,43 @@ class ConversationManager:
                     content TEXT
                 )
             ''')
+            # Ensure session_id column exists for per-visitor chats
+            try:
+                cursor.execute("PRAGMA table_info(conversations)")
+                cols = [row[1] for row in cursor.fetchall()]
+                if 'session_id' not in cols:
+                    cursor.execute("ALTER TABLE conversations ADD COLUMN session_id TEXT DEFAULT 'default'")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_conversations_session_ts ON conversations(session_id, timestamp)")
+            except Exception:
+                # Best-effort; continue even if migration fails
+                pass
             conn.commit()
 
-    def add_message(self, role: str, content: str):
+    def add_message(self, role: str, content: str, session_id: str = 'default'):
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                'INSERT INTO conversations (role, content) VALUES (?, ?)',
-                (role, content)
+                'INSERT INTO conversations (role, content, session_id) VALUES (?, ?, ?)',
+                (role, content, session_id)
             )
             conn.commit()
 
-    def get_recent_messages(self, limit: int = 20) -> List[Dict[str, str]]:
+    def get_recent_messages(self, limit: int = 20, session_id: str = 'default') -> List[Dict[str, str]]:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                'SELECT role, content FROM conversations ORDER BY timestamp DESC LIMIT ?',
-                (limit,)
+                'SELECT role, content FROM conversations WHERE session_id = ? ORDER BY timestamp DESC LIMIT ?',
+                (session_id, limit)
             )
             return [{'role': role, 'content': content} for role, content in cursor.fetchall()][::-1]
 
-    def clear_history(self):
+    def clear_history(self, session_id: str | None = None):
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute('DELETE FROM conversations')
+            if session_id:
+                cursor.execute('DELETE FROM conversations WHERE session_id = ?', (session_id,))
+            else:
+                cursor.execute('DELETE FROM conversations')
             conn.commit()
 
     def summarize_old_conversations(self, days_old: int = 7):
