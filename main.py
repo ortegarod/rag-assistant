@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 # This is the entry point of the application, handling user interactions and orchestrating the RAG process.
 async def main():
-    logger.info("Starting Jarvis AI assistant...")
+    logger.info("Starting AI assistant...")
     rag_pipeline = RAGPipeline()  # Initialize the RAG pipeline
     try:
         rag_pipeline.initialize()
@@ -21,7 +21,7 @@ async def main():
         return
 
     # Print welcome message and available templates
-    logger.info("Welcome to Jarvis, the personal AI assistant.")
+    logger.info("Welcome to the personal AI assistant.")
     logger.info("This system can handle up to 32,000 tokens of context, allowing for detailed, contextual responses, "
                 "in addition to its substantial general knowledge of the world.")
     logger.info("Type 'quit' to exit.")
@@ -33,7 +33,7 @@ async def main():
         logger.debug(f"User input: {user_input}")
 
         if user_input.lower() == 'quit':
-            logger.info("Exiting Jarvis AI assistant.")
+            logger.info("Exiting AI assistant.")
             break
         elif user_input.lower() == 'change template':
             logger.info("Template change requested. This feature is not implemented yet.")

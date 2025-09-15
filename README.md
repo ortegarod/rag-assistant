@@ -1,4 +1,4 @@
-# RAG Assistant (Jarvis)
+# RAG Assistant
 
 A simple Retrieval-Augmented Generation (RAG) CLI assistant that retrieves context from Weaviate and generates responses via an OpenAI-compatible chat completions API (e.g., Jan AI, Ollama, or OpenAI-compatible gateways).
 
